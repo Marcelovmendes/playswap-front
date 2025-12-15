@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import styled from "styled-components";
 import { ArrowRight, Music, Youtube } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -8,7 +9,23 @@ import { Card } from "@/components/ui/Card";
 import { GradientHeading } from "@/components/ui/GradientHeading";
 import { spotifyApi } from "@/lib/api/spotify";
 
+interface SpotifyAuthMessage {
+  type: "SPOTIFY_AUTH_CALLBACK";
+  status: "success" | "error";
+  error: string | null;
+}
+
+function isSpotifyAuthMessage(data: unknown): data is SpotifyAuthMessage {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    "type" in data &&
+    (data as SpotifyAuthMessage).type === "SPOTIFY_AUTH_CALLBACK"
+  );
+}
+
 export default function LandingPage() {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,6 +46,22 @@ export default function LandingPage() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    function handleMessage(event: MessageEvent) {
+      if (event.origin !== window.location.origin) return;
+      if (!isSpotifyAuthMessage(event.data)) return;
+
+      if (event.data.status === "success") {
+        router.push("/dashboard");
+      } else if (event.data.status === "error") {
+        setError(event.data.error || "Authentication failed");
+      }
+    }
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [router]);
 
   return (
     <Container>
