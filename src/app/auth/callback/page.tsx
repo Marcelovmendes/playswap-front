@@ -1,13 +1,128 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import styled, { keyframes } from "styled-components";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 
 type CallbackStatus = "loading" | "success" | "error";
 
-const AUTO_CLOSE_SECONDS = 3;
+const AUTO_CLOSE_SECONDS = 5;
+
+function notifyParentWindow(status: CallbackStatus, token: string | null, error: string | null) {
+  if (!window.opener) {
+    console.error("[Callback] window.opener is null!");
+    return;
+  }
+
+  const message = { type: "SPOTIFY_AUTH_CALLBACK", status, token, error };
+  const allowedOrigins = ["http://localhost:3000", "http://127.0.0.1:3000"];
+
+  allowedOrigins.forEach(targetOrigin => {
+    window.opener.postMessage(message, targetOrigin);
+  });
+}
+
+function closeWindow() {
+  window.close();
+}
+
+export default function AuthCallbackPage() {
+  const [status, setStatus] = useState<CallbackStatus>("loading");
+  const [token, setToken] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState(AUTO_CLOSE_SECONDS);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tokenParam = params.get("token");
+    const errorParam = params.get("error");
+
+    if (errorParam) {
+      setStatus("error");
+      setError(errorParam);
+    } else if (tokenParam) {
+      setStatus("success");
+      setToken(tokenParam);
+    } else {
+      setStatus("error");
+      setError("No token received");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (status === "loading") return;
+
+    notifyParentWindow(status, token, error);
+
+    const interval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          closeWindow();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [status, token, error]);
+
+  if (status === "loading") {
+    return (
+      <Container>
+        <Card>
+          <IconWrapper $variant="loading">
+            <SpinningIcon />
+          </IconWrapper>
+          <Title>Processing...</Title>
+          <Message>Please wait while we complete your authentication.</Message>
+        </Card>
+      </Container>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <Container>
+        <Card>
+          <IconWrapper $variant="error">
+            <XCircle />
+          </IconWrapper>
+          <Title>Authentication Failed</Title>
+          <Message>{error || "Something went wrong. Please try again."}</Message>
+          <CloseMessage>
+            This window will close in {countdown} seconds...{" "}
+            <CloseButton $variant="error" onClick={closeWindow}>
+              Close now
+            </CloseButton>
+          </CloseMessage>
+        </Card>
+      </Container>
+    );
+  }
+
+  return (
+    <Container>
+      <Card>
+        <IconWrapper $variant="success">
+          <CheckCircle />
+        </IconWrapper>
+        <Title>Connected to Spotify!</Title>
+        <Message>
+          Your Spotify account has been successfully linked. You can now access
+          your playlists.
+        </Message>
+        <CloseMessage>
+          This window will close in {countdown} seconds...{" "}
+          <CloseButton $variant="success" onClick={closeWindow}>
+            Close now
+          </CloseButton>
+        </CloseMessage>
+      </Card>
+    </Container>
+  );
+}
 
 const fadeIn = keyframes`
   from {
@@ -21,12 +136,8 @@ const fadeIn = keyframes`
 `;
 
 const spin = keyframes`
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 `;
 
 const Container = styled.main`
@@ -106,109 +217,3 @@ const CloseButton = styled.button<{ $variant: CallbackStatus }>`
   cursor: pointer;
   text-decoration: underline;
 `;
-
-function notifyParentWindow(status: CallbackStatus, error: string | null) {
-  if (!window.opener) return;
-
-  window.opener.postMessage(
-    { type: "SPOTIFY_AUTH_CALLBACK", status, error },
-    window.location.origin
-  );
-}
-
-function closeWindow() {
-  window.close();
-}
-
-export default function AuthCallbackPage() {
-  const searchParams = useSearchParams();
-  const [status, setStatus] = useState<CallbackStatus>("loading");
-  const [countdown, setCountdown] = useState(AUTO_CLOSE_SECONDS);
-
-  const success = searchParams.get("success");
-  const error = searchParams.get("error");
-
-  useEffect(() => {
-    if (error) {
-      setStatus("error");
-    } else if (success === "true") {
-      setStatus("success");
-    } else {
-      setStatus("success");
-    }
-  }, [success, error]);
-
-  useEffect(() => {
-    if (status === "loading") return;
-
-    notifyParentWindow(status, error);
-
-    const interval = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          closeWindow();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [status, error]);
-
-  if (status === "loading") {
-    return (
-      <Container>
-        <Card>
-          <IconWrapper $variant="loading">
-            <SpinningIcon />
-          </IconWrapper>
-          <Title>Processing...</Title>
-          <Message>Please wait while we complete your authentication.</Message>
-        </Card>
-      </Container>
-    );
-  }
-
-  if (status === "error") {
-    return (
-      <Container>
-        <Card>
-          <IconWrapper $variant="error">
-            <XCircle />
-          </IconWrapper>
-          <Title>Authentication Failed</Title>
-          <Message>{error || "Something went wrong. Please try again."}</Message>
-          <CloseMessage>
-            This window will close in {countdown} seconds...{" "}
-            <CloseButton $variant="error" onClick={closeWindow}>
-              Close now
-            </CloseButton>
-          </CloseMessage>
-        </Card>
-      </Container>
-    );
-  }
-
-  return (
-    <Container>
-      <Card>
-        <IconWrapper $variant="success">
-          <CheckCircle />
-        </IconWrapper>
-        <Title>Connected to Spotify!</Title>
-        <Message>
-          Your Spotify account has been successfully linked. You can now access
-          your playlists.
-        </Message>
-        <CloseMessage>
-          This window will close in {countdown} seconds...{" "}
-          <CloseButton $variant="success" onClick={closeWindow}>
-            Close now
-          </CloseButton>
-        </CloseMessage>
-      </Card>
-    </Container>
-  );
-}

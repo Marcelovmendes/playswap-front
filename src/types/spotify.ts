@@ -67,3 +67,27 @@ export type SpotifyPlaylistResponse = {
   next: string | null
   previous: string | null
 }
+
+export interface UserProfile {
+  id: string
+  displayName: string
+  email: string
+  country: string
+  photoCover: string | null
+  externalUrls: string
+  followersCount: number
+  type: string
+}
+
+export interface Playlist {
+  id: string
+  name: string
+  description: string | null
+  trackCount: number
+  imageUrl: string | null
+  ownerId: string
+  ownerName: string
+  publicAccess: boolean
+  collaborative: boolean
+  externalUrl: string
+}

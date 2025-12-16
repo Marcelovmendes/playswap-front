@@ -1,5 +1,5 @@
 import { apiClient } from './client'
-import type { SpotifyUser, SpotifyPlaylist, SpotifyPlaylistResponse } from '@/types/spotify'
+import type { SpotifyUser, SpotifyPlaylist, SpotifyPlaylistResponse, UserProfile, Playlist } from '@/types/spotify'
 
 export const spotifyApi = {
   auth: {
@@ -17,12 +17,16 @@ export const spotifyApi = {
 
   user: {
     getDetails: async () => {
-      const response = await apiClient.get<SpotifyUser>('/api/spotify/v1/users/details')
+      const response = await apiClient.get<UserProfile>('/api/spotify/v1/users/details')
       return response.data
     },
   },
 
   playlists: {
+    getUserPlaylists: async () => {
+      const response = await apiClient.get<Playlist[]>('/api/spotify/v1/playlist/')
+      return response.data
+    },
     getAll: async () => {
       const response = await apiClient.get<SpotifyPlaylist[]>('/api/spotify/v1/playlist/')
       return response.data

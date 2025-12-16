@@ -8,10 +8,13 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { GradientHeading } from "@/components/ui/GradientHeading";
 import { spotifyApi } from "@/lib/api/spotify";
+import { useAuthStore } from "@/store/authStore";
+import { apiClient } from "@/lib/api/client";
 
 interface SpotifyAuthMessage {
   type: "SPOTIFY_AUTH_CALLBACK";
   status: "success" | "error";
+  token: string | null;
   error: string | null;
 }
 
@@ -34,9 +37,7 @@ export default function LandingPage() {
       setIsLoading(true);
       setError(null);
       await spotifyApi.auth.initiateLogin();
-      console.log("Spotify login initiated");
     } catch (error: any) {
-      console.error("Failed to initiate Spotify login:", error);
       const errorMessage =
         error.response?.data?.message ||
         error.message ||
@@ -48,12 +49,36 @@ export default function LandingPage() {
   };
 
   useEffect(() => {
-    function handleMessage(event: MessageEvent) {
-      if (event.origin !== window.location.origin) return;
-      if (!isSpotifyAuthMessage(event.data)) return;
+    async function handleMessage(event: MessageEvent) {
+      const allowedOrigins = ["http://localhost:3000", "http://127.0.0.1:3000"];
+
+      if (!allowedOrigins.includes(event.origin)) {
+        return;
+      }
+
+      if (!isSpotifyAuthMessage(event.data)) {
+        return;
+      }
 
       if (event.data.status === "success") {
-        router.push("/dashboard");
+        if (!event.data.token) {
+          setError("No token received from authentication");
+          return;
+        }
+
+        setIsLoading(true);
+        try {
+          await apiClient.post("/api/auth/exchange", {
+            token: event.data.token,
+          });
+
+          await useAuthStore.getState().checkAuth();
+          router.push("/dashboard");
+        } catch (error) {
+          setError("Failed to complete authentication");
+        } finally {
+          setIsLoading(false);
+        }
       } else if (event.data.status === "error") {
         setError(event.data.error || "Authentication failed");
       }
