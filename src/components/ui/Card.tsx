@@ -1,7 +1,5 @@
-"use client"
-
-import styled from "styled-components"
 import { HTMLAttributes } from "react"
+import { cn } from "@/lib/utils"
 
 type CardPadding = "sm" | "md" | "lg"
 
@@ -10,58 +8,32 @@ type CardProps = HTMLAttributes<HTMLDivElement> & {
   padding?: CardPadding
 }
 
-type StyledCardProps = {
-  $hover: boolean
-  $padding: CardPadding
+const paddingClasses = {
+  sm: "p-md",
+  md: "p-lg",
+  lg: "p-xl",
 }
 
-const paddingStyles = {
-  sm: (theme: any) => theme.spacing.md,
-  md: (theme: any) => theme.spacing.lg,
-  lg: (theme: any) => theme.spacing.xl,
-}
-
-const StyledCard = styled.div<StyledCardProps>`
-  position: relative;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid ${({ theme }) => theme.colors.border.DEFAULT};
-  border-radius: ${({ theme }) => theme.borderRadius.xl};
-  backdrop-filter: blur(10px);
-  transition: all ${({ theme }) => theme.transitions.base};
-  padding: ${({ $padding, theme }) => paddingStyles[$padding](theme)};
-
-  &::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
-    opacity: 0;
-    transition: opacity ${({ theme }) => theme.transitions.base};
-    border-radius: ${({ theme }) => theme.borderRadius.xl};
-    pointer-events: none;
-  }
-
-  ${({ $hover, theme }) =>
-    $hover &&
-    `
-    cursor: pointer;
-
-    &:hover {
-      transform: translateY(-4px);
-      border-color: rgba(16, 185, 129, 0.4);
-      box-shadow: 0 12px 40px rgba(16, 185, 129, 0.15);
-
-      &::before {
-        opacity: 1;
-      }
-    }
-  `}
-`
-
-export function Card({ children, hover = false, padding = "md", ...props }: CardProps) {
+export function Card({
+  children,
+  hover = false,
+  padding = "md",
+  className,
+  ...props
+}: CardProps) {
   return (
-    <StyledCard $hover={hover} $padding={padding} {...props}>
+    <div
+      className={cn(
+        "relative bg-white/[0.02] border border-border rounded-xl backdrop-blur-[10px] transition-all duration-base",
+        "before:absolute before:inset-0 before:bg-gradient-to-br before:from-accent-green/10 before:to-accent-blue/10 before:opacity-0 before:transition-opacity before:duration-base before:rounded-xl before:pointer-events-none",
+        hover &&
+          "cursor-pointer hover:-translate-y-1 hover:border-accent-green/40 hover:shadow-[0_12px_40px_rgba(16,185,129,0.15)] hover:before:opacity-100",
+        paddingClasses[padding],
+        className
+      )}
+      {...props}
+    >
       {children}
-    </StyledCard>
+    </div>
   )
 }

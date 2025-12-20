@@ -16,8 +16,7 @@ export const spotifyApi = {
         },
       })
       const spotifyAuthUrl = response.data
-      console.log("Redirecting to Spotify Auth URL:", spotifyAuthUrl)
-      window.open(spotifyAuthUrl, "_blank", "width=600,height=800")
+      window.open(spotifyAuthUrl, "_blank", "width=500,height=700")
     },
   },
 

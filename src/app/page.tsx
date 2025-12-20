@@ -1,14 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
-import styled from "styled-components"
 import { ArrowRight, Music, Youtube } from "lucide-react"
 import { Button } from "@/components/ui/Button"
 import { Card } from "@/components/ui/Card"
 import { GradientHeading } from "@/components/ui/GradientHeading"
 import { spotifyApi } from "@/lib/api/spotify"
-import { useAuthStore } from "@/store/authStore"
 import { apiClient } from "@/lib/api/client"
 
 type SpotifyAuthMessage = {
@@ -31,6 +29,7 @@ export default function LandingPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const isExchangingRef = useRef(false)
 
   const handleConnectSpotify = async () => {
     try {
@@ -38,6 +37,7 @@ export default function LandingPage() {
       setError(null)
       await spotifyApi.auth.initiateLogin()
     } catch (error: any) {
+      console.error("Error connecting to Spotify:", error)
       const errorMessage =
         error.response?.data?.message ||
         error.message ||
@@ -66,16 +66,23 @@ export default function LandingPage() {
           return
         }
 
+        if (isExchangingRef.current) {
+          return
+        }
+
+        isExchangingRef.current = true
         setIsLoading(true)
+
         try {
           await apiClient.post("/api/auth/exchange", {
             token: event.data.token,
           })
 
-          await useAuthStore.getState().checkAuth()
           router.push("/dashboard")
         } catch (error) {
+          console.error("Auth exchange error:", error)
           setError("Failed to complete authentication")
+          isExchangingRef.current = false
         } finally {
           setIsLoading(false)
         }
@@ -89,16 +96,23 @@ export default function LandingPage() {
   }, [router])
 
   return (
-    <Container>
-      <HeroSection>
-        <HeroContent>
-          <HeroLabel>✨ Platform Bridge</HeroLabel>
-          <Title>Transfer your playlists across platforms</Title>
-          <Subtitle>
+    <main className="min-h-screen flex flex-col items-center justify-center px-2xl bg-bg-primary">
+      <section className="min-h-[60vh] flex flex-col justify-center relative mb-xl">
+        <div className="absolute -top-1/2 -right-[10%] w-[800px] h-[800px] bg-[radial-gradient(circle,rgba(16,185,129,0.15)_0%,transparent_70%)] pointer-events-none animate-pulse" />
+        <div className="absolute -bottom-[30%] -left-[10%] w-[600px] h-[600px] bg-[radial-gradient(circle,rgba(59,130,246,0.12)_0%,transparent_70%)] pointer-events-none animate-pulse-fast" />
+
+        <div className="relative z-10 text-center max-w-[1200px] w-full mx-auto">
+          <div className="inline-block text-sm tracking-wider uppercase text-accent-green bg-accent-green/10 border border-accent-green/30 px-base py-sm mb-2xl rounded-sm">
+            ✨ Platform Bridge
+          </div>
+          <GradientHeading className="text-6xl mb-lg max-md:text-4xl">
+            Transfer your playlists across platforms
+          </GradientHeading>
+          <p className="text-xl text-text-quaternary mb-xl max-w-[600px] mx-auto leading-normal">
             Convert Spotify playlists to YouTube Music seamlessly. Preserve your music collection
             across streaming services.
-          </Subtitle>
-          <ButtonGroup>
+          </p>
+          <div className="flex gap-base justify-center flex-wrap mt-2xl">
             <Button variant="primary" size="lg" onClick={handleConnectSpotify} disabled={isLoading}>
               <Music size={20} />
               {isLoading ? "Connecting..." : "Connect Spotify"}
@@ -106,233 +120,53 @@ export default function LandingPage() {
             <Button variant="secondary" size="lg">
               Learn More
             </Button>
-          </ButtonGroup>
-          {error && <ErrorMessage>{error}</ErrorMessage>}
-        </HeroContent>
-      </HeroSection>
+          </div>
+          {error && (
+            <div className="mt-md p-md bg-red-500/10 border border-red-500/30 rounded-lg text-[#ef4444] text-center max-w-[600px] mx-auto">
+              {error}
+            </div>
+          )}
+        </div>
+      </section>
 
-      <FeaturesSection>
-        <FeatureCard padding="lg">
-          <ConversionFlow>
-            <PlatformIcon $gradient="linear-gradient(135deg, #1DB954 0%, #1ed760 100%)">
+      <section className="max-w-[1200px] w-full grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-xl mt-2xl relative z-10">
+        <Card padding="lg" className="flex flex-col items-center text-center">
+          <div className="flex items-center gap-lg justify-center flex-wrap mb-lg">
+            <div className="w-20 h-20 rounded-xl bg-[linear-gradient(135deg,#1DB954_0%,#1ed760_100%)] flex items-center justify-center text-white">
               <Music size={40} />
-            </PlatformIcon>
-            <ArrowIcon />
-            <PlatformIcon $gradient="linear-gradient(135deg, #FF0000 0%, #cc0000 100%)">
+            </div>
+            <ArrowRight className="text-accent-green w-8 h-8" />
+            <div className="w-20 h-20 rounded-xl bg-[linear-gradient(135deg,#FF0000_0%,#cc0000_100%)] flex items-center justify-center text-white">
               <Youtube size={40} />
-            </PlatformIcon>
-          </ConversionFlow>
-          <FeatureTitle>Seamless Conversion</FeatureTitle>
-          <FeatureDescription>
+            </div>
+          </div>
+          <h3 className="text-xl font-semibold mb-sm text-text-primary">Seamless Conversion</h3>
+          <p className="text-base text-text-secondary leading-relaxed">
             Transfer your playlists from Spotify to YouTube Music with just a few clicks.
-          </FeatureDescription>
-        </FeatureCard>
+          </p>
+        </Card>
 
-        <FeatureCard padding="lg">
-          <IconWrapper $color="linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)">
+        <Card padding="lg" className="flex flex-col items-center text-center">
+          <div className="w-16 h-16 rounded-xl bg-gradient-secondary flex items-center justify-center mb-lg">
             <Music size={32} />
-          </IconWrapper>
-          <FeatureTitle>Preserve Your Music</FeatureTitle>
-          <FeatureDescription>
+          </div>
+          <h3 className="text-xl font-semibold mb-sm text-text-primary">Preserve Your Music</h3>
+          <p className="text-base text-text-secondary leading-relaxed">
             Keep all your carefully curated playlists safe and accessible on multiple platforms.
-          </FeatureDescription>
-        </FeatureCard>
+          </p>
+        </Card>
 
-        <FeatureCard padding="lg">
-          <IconWrapper $color="linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)">
+        <Card padding="lg" className="flex flex-col items-center text-center">
+          <div className="w-16 h-16 rounded-xl bg-gradient-tertiary flex items-center justify-center mb-lg">
             <ArrowRight size={32} />
-          </IconWrapper>
-          <FeatureTitle>Fast & Reliable</FeatureTitle>
-          <FeatureDescription>
+          </div>
+          <h3 className="text-xl font-semibold mb-sm text-text-primary">Fast & Reliable</h3>
+          <p className="text-base text-text-secondary leading-relaxed">
             Our optimized conversion process ensures your playlists are transferred quickly and
             accurately.
-          </FeatureDescription>
-        </FeatureCard>
-      </FeaturesSection>
-    </Container>
+          </p>
+        </Card>
+      </section>
+    </main>
   )
 }
-const Container = styled.main`
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: ${({ theme }) => theme.spacing["2xl"]};
-  background: ${({ theme }) => theme.colors.bg.primary};
-`
-
-const HeroSection = styled.section`
-  min-height: 60vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  position: relative;
-  margin-bottom: ${({ theme }) => theme.spacing.xl};
-
-  &::before {
-    content: "";
-    position: absolute;
-    top: -50%;
-    right: -10%;
-    width: 800px;
-    height: 800px;
-    background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
-    pointer-events: none;
-    animation: pulse 8s ease-in-out infinite;
-  }
-
-  &::after {
-    content: "";
-    position: absolute;
-    bottom: -30%;
-    left: -10%;
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(circle, rgba(59, 130, 246, 0.12) 0%, transparent 70%);
-    pointer-events: none;
-    animation: pulse 6s ease-in-out infinite;
-  }
-
-  @keyframes pulse {
-    0%,
-    100% {
-      transform: scale(1);
-      opacity: 1;
-    }
-    50% {
-      transform: scale(1.1);
-      opacity: 0.8;
-    }
-  }
-`
-
-const HeroContent = styled.div`
-  position: relative;
-  z-index: 1;
-  text-align: center;
-  max-width: 1200px;
-  width: 100%;
-  margin: 0 auto;
-`
-
-const HeroLabel = styled.div`
-  display: inline-block;
-  font-size: ${({ theme }) => theme.fontSizes.sm};
-  letter-spacing: ${({ theme }) => theme.letterSpacing.wider};
-  text-transform: uppercase;
-  color: ${({ theme }) => theme.colors.accent.green.DEFAULT};
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  padding: ${({ theme }) => `${theme.spacing.sm} ${theme.spacing.base}`};
-  margin-bottom: ${({ theme }) => theme.spacing["2xl"]};
-  border-radius: ${({ theme }) => theme.borderRadius.sm};
-`
-
-const Title = styled(GradientHeading)`
-  font-size: ${({ theme }) => theme.fontSizes["6xl"]};
-  margin-bottom: ${({ theme }) => theme.spacing.lg};
-
-  @media (max-width: 768px) {
-    font-size: ${({ theme }) => theme.fontSizes["4xl"]};
-  }
-`
-
-const Subtitle = styled.p`
-  font-size: ${({ theme }) => theme.fontSizes.xl};
-  color: ${({ theme }) => theme.colors.text.quaternary};
-  margin-bottom: ${({ theme }) => theme.spacing.xl};
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
-  line-height: ${({ theme }) => theme.lineHeight.normal};
-`
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: ${({ theme }) => theme.spacing.base};
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-top: ${({ theme }) => theme.spacing["2xl"]};
-`
-
-const FeaturesSection = styled.section`
-  max-width: 1200px;
-  width: 100%;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: ${({ theme }) => theme.spacing.xl};
-  margin-top: ${({ theme }) => theme.spacing["2xl"]};
-  position: relative;
-  z-index: 1;
-`
-
-const FeatureCard = styled(Card)`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-`
-
-const IconWrapper = styled.div<{ $color: string }>`
-  width: 64px;
-  height: 64px;
-  border-radius: ${({ theme }) => theme.borderRadius.xl};
-  background: ${({ $color }) => $color};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: ${({ theme }) => theme.spacing.lg};
-`
-
-const FeatureTitle = styled.h3`
-  font-size: ${({ theme }) => theme.fontSizes.xl};
-  font-weight: ${({ theme }) => theme.fontWeights.semibold};
-  margin-bottom: ${({ theme }) => theme.spacing.sm};
-  color: ${({ theme }) => theme.colors.text.primary};
-`
-
-const FeatureDescription = styled.p`
-  font-size: ${({ theme }) => theme.fontSizes.base};
-  color: ${({ theme }) => theme.colors.text.secondary};
-  line-height: ${({ theme }) => theme.lineHeight.relaxed};
-`
-
-const ConversionFlow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing.lg};
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-bottom: ${({ theme }) => theme.spacing.lg};
-`
-
-const PlatformIcon = styled.div<{ $gradient: string }>`
-  width: 80px;
-  height: 80px;
-  border-radius: ${({ theme }) => theme.borderRadius.xl};
-  background: ${({ $gradient }) => $gradient};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-`
-
-const ArrowIcon = styled(ArrowRight)`
-  color: ${({ theme }) => theme.colors.accent.green.DEFAULT};
-  width: 32px;
-  height: 32px;
-`
-
-const ErrorMessage = styled.div`
-  margin-top: ${({ theme }) => theme.spacing.md};
-  padding: ${({ theme }) => theme.spacing.md};
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: ${({ theme }) => theme.borderRadius.lg};
-  color: #ef4444;
-  text-align: center;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
-`

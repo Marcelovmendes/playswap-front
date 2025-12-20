@@ -1,7 +1,5 @@
-"use client"
-
-import styled, { css } from "styled-components"
 import { ButtonHTMLAttributes } from "react"
+import { cn } from "@/lib/utils"
 
 type ButtonVariant = "primary" | "secondary" | "gradient"
 type ButtonSize = "sm" | "md" | "lg"
@@ -12,111 +10,43 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   fullWidth?: boolean
 }
 
-type StyledButtonProps = {
-  $variant: ButtonVariant
-  $size: ButtonSize
-  $fullWidth?: boolean
+const variantClasses = {
+  primary:
+    "bg-gradient-primary text-white shadow-green-glow hover:shadow-green-glow-lg hover:-translate-y-0.5 active:translate-y-0",
+  secondary:
+    "glass-effect text-text-primary hover:bg-white/10 hover:border-white/20 active:bg-white/[0.08]",
+  gradient:
+    "bg-gradient-secondary text-white shadow-blue-glow hover:shadow-blue-glow-lg hover:-translate-y-0.5 active:translate-y-0",
 }
 
-const sizeStyles = {
-  sm: css`
-    padding: ${({ theme }) => `${theme.spacing.sm} ${theme.spacing.base}`};
-    font-size: ${({ theme }) => theme.fontSizes.sm};
-  `,
-  md: css`
-    padding: ${({ theme }) => `${theme.spacing.md} ${theme.spacing.lg}`};
-    font-size: ${({ theme }) => theme.fontSizes.base};
-  `,
-  lg: css`
-    padding: ${({ theme }) => `${theme.spacing.base} ${theme.spacing.xl}`};
-    font-size: ${({ theme }) => theme.fontSizes.lg};
-  `,
+const sizeClasses = {
+  sm: "px-base py-sm text-sm",
+  md: "px-lg py-md text-base",
+  lg: "px-xl py-base text-lg",
 }
-
-const variantStyles = {
-  primary: css`
-    background: ${({ theme }) => theme.gradients.primary};
-    color: #fff;
-    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
-
-    &:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 30px rgba(16, 185, 129, 0.4);
-    }
-
-    &:active:not(:disabled) {
-      transform: translateY(0);
-    }
-  `,
-  secondary: css`
-    background: ${({ theme }) => theme.effects.glass.background};
-    backdrop-filter: ${({ theme }) => theme.effects.glass.blur};
-    border: 1px solid ${({ theme }) => theme.effects.glass.border};
-    color: ${({ theme }) => theme.colors.text.primary};
-
-    &:hover:not(:disabled) {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(255, 255, 255, 0.2);
-    }
-
-    &:active:not(:disabled) {
-      background: rgba(255, 255, 255, 0.08);
-    }
-  `,
-  gradient: css`
-    background: ${({ theme }) => theme.gradients.secondary};
-    color: #fff;
-    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
-
-    &:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4);
-    }
-
-    &:active:not(:disabled) {
-      transform: translateY(0);
-    }
-  `,
-}
-
-const StyledButton = styled.button<StyledButtonProps>`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: ${({ theme }) => theme.spacing.sm};
-  font-weight: ${({ theme }) => theme.fontWeights.semibold};
-  letter-spacing: ${({ theme }) => theme.letterSpacing.wide};
-  border-radius: ${({ theme }) => theme.borderRadius.lg};
-  transition: all ${({ theme }) => theme.transitions.base};
-  cursor: pointer;
-  border: none;
-  outline: none;
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  &:focus-visible {
-    outline: 2px solid ${({ theme }) => theme.colors.accent.green.DEFAULT};
-    outline-offset: 2px;
-  }
-
-  ${({ $size }) => sizeStyles[$size]}
-  ${({ $variant }) => variantStyles[$variant]}
-  ${({ $fullWidth }) => $fullWidth && "width: 100%;"}
-`
 
 export function Button({
   children,
   variant = "primary",
   size = "md",
   fullWidth,
+  className,
   ...props
 }: ButtonProps) {
   return (
-    <StyledButton $variant={variant} $size={size} $fullWidth={fullWidth} {...props}>
+    <button
+      className={cn(
+        "inline-flex items-center justify-center gap-sm font-semibold tracking-wide rounded-lg transition-all duration-base cursor-pointer border-none outline-none",
+        "disabled:opacity-50 disabled:cursor-not-allowed",
+        "focus-visible:outline-2 focus-visible:outline-accent-green focus-visible:outline-offset-2",
+        variantClasses[variant],
+        sizeClasses[size],
+        fullWidth && "w-full",
+        className
+      )}
+      {...props}
+    >
       {children}
-    </StyledButton>
+    </button>
   )
 }

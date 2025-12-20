@@ -1,7 +1,5 @@
-"use client"
-
-import styled from "styled-components"
 import { HTMLAttributes } from "react"
+import { cn } from "@/lib/utils"
 
 type HeadingLevel = "h1" | "h2" | "h3"
 
@@ -11,51 +9,43 @@ type GradientHeadingProps = HTMLAttributes<HTMLHeadingElement> & {
 }
 
 const letterSpacingMap = {
-  h1: "-2px",
-  h2: "-0.5px",
+  h1: "-0.05em",
+  h2: "-0.0125em",
   h3: "0",
 }
 
-const StyledHeading = styled.h1<{ $gradient: string; $level: HeadingLevel }>`
-  background: ${({ $gradient }) => $gradient};
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  font-weight: ${({ theme }) => theme.fontWeights.bold};
-  line-height: ${({ theme }) => theme.lineHeight.tight};
-  letter-spacing: ${({ $level }) => letterSpacingMap[$level]};
-`
+const gradientClasses = {
+  hero: "text-gradient-hero",
+  primary: "text-gradient-primary",
+  secondary: "text-gradient-secondary",
+  tertiary: "bg-gradient-tertiary bg-clip-text text-transparent",
+  multi: "bg-gradient-multi bg-clip-text text-transparent",
+}
 
 export function GradientHeading({
   children,
   level = "h1",
   gradient = "hero",
+  className,
+  style,
   ...props
 }: GradientHeadingProps) {
-  const gradientMap = {
-    hero: (theme: any) => theme.gradients.hero,
-    primary: (theme: any) => theme.gradients.primary,
-    secondary: (theme: any) => theme.gradients.secondary,
-    tertiary: (theme: any) => theme.gradients.tertiary,
-    multi: (theme: any) => theme.gradients.multi,
-  }
+  const Component = level
 
   return (
-    <StyledHeading
-      as={level}
-      $gradient={`var(--gradient-${gradient})`}
-      $level={level}
+    <Component
+      className={cn(
+        "font-bold leading-tight",
+        gradientClasses[gradient],
+        className
+      )}
       style={{
-        ["--gradient-hero" as any]: "linear-gradient(135deg, #10b981 0%, #3b82f6 100%)",
-        ["--gradient-primary" as any]: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-        ["--gradient-secondary" as any]: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
-        ["--gradient-tertiary" as any]: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
-        ["--gradient-multi" as any]:
-          "linear-gradient(135deg, #10b981 0%, #3b82f6 50%, #8b5cf6 100%)",
+        letterSpacing: letterSpacingMap[level],
+        ...style,
       }}
       {...props}
     >
       {children}
-    </StyledHeading>
+    </Component>
   )
 }
