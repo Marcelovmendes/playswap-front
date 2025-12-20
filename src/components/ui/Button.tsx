@@ -1,47 +1,47 @@
-"use client";
+"use client"
 
-import styled, { css } from "styled-components";
-import { ButtonHTMLAttributes } from "react";
+import styled, { css } from "styled-components"
+import { ButtonHTMLAttributes } from "react"
 
-type ButtonVariant = "primary" | "secondary" | "gradient";
-type ButtonSize = "sm" | "md" | "lg";
+type ButtonVariant = "primary" | "secondary" | "gradient"
+type ButtonSize = "sm" | "md" | "lg"
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: ButtonVariant;
-  size?: ButtonSize;
-  fullWidth?: boolean;
+type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: ButtonVariant
+  size?: ButtonSize
+  fullWidth?: boolean
 }
 
-interface StyledButtonProps {
-  $variant: ButtonVariant;
-  $size: ButtonSize;
-  $fullWidth?: boolean;
+type StyledButtonProps = {
+  $variant: ButtonVariant
+  $size: ButtonSize
+  $fullWidth?: boolean
 }
 
 const sizeStyles = {
   sm: css`
-    padding: ${({ theme }) => `${theme.spacing.sm} ${theme.spacing.md}`};
+    padding: ${({ theme }) => `${theme.spacing.sm} ${theme.spacing.base}`};
     font-size: ${({ theme }) => theme.fontSizes.sm};
   `,
   md: css`
-    padding: ${({ theme }) => `${theme.spacing.sm} ${theme.spacing.lg}`};
+    padding: ${({ theme }) => `${theme.spacing.md} ${theme.spacing.lg}`};
     font-size: ${({ theme }) => theme.fontSizes.base};
   `,
   lg: css`
-    padding: ${({ theme }) => `${theme.spacing.md} ${theme.spacing.xl}`};
+    padding: ${({ theme }) => `${theme.spacing.base} ${theme.spacing.xl}`};
     font-size: ${({ theme }) => theme.fontSizes.lg};
   `,
-};
+}
 
 const variantStyles = {
   primary: css`
-    background: ${({ theme }) => theme.colors.accent.green.DEFAULT};
-    color: ${({ theme }) => theme.colors.bg.primary};
+    background: ${({ theme }) => theme.gradients.primary};
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
 
     &:hover:not(:disabled) {
-      background: ${({ theme }) => theme.colors.accent.green.dark};
       transform: translateY(-2px);
-      box-shadow: ${({ theme }) => theme.shadows.md};
+      box-shadow: 0 8px 30px rgba(16, 185, 129, 0.4);
     }
 
     &:active:not(:disabled) {
@@ -49,33 +49,35 @@ const variantStyles = {
     }
   `,
   secondary: css`
-    background: ${({ theme }) => theme.colors.bg.tertiary};
+    background: ${({ theme }) => theme.effects.glass.background};
+    backdrop-filter: ${({ theme }) => theme.effects.glass.blur};
+    border: 1px solid ${({ theme }) => theme.effects.glass.border};
     color: ${({ theme }) => theme.colors.text.primary};
-    border: 1px solid ${({ theme }) => theme.colors.border.DEFAULT};
 
     &:hover:not(:disabled) {
-      background: ${({ theme }) => theme.colors.bg.secondary};
-      border-color: ${({ theme }) => theme.colors.border.light};
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
     }
 
     &:active:not(:disabled) {
-      background: ${({ theme }) => theme.colors.bg.primary};
+      background: rgba(255, 255, 255, 0.08);
     }
   `,
   gradient: css`
-    background: ${({ theme }) => theme.colors.gradients.primary};
-    color: ${({ theme }) => theme.colors.text.primary};
+    background: ${({ theme }) => theme.gradients.secondary};
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
 
     &:hover:not(:disabled) {
       transform: translateY(-2px);
-      box-shadow: ${({ theme }) => theme.shadows.lg};
+      box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4);
     }
 
     &:active:not(:disabled) {
       transform: translateY(0);
     }
   `,
-};
+}
 
 const StyledButton = styled.button<StyledButtonProps>`
   display: inline-flex;
@@ -83,6 +85,7 @@ const StyledButton = styled.button<StyledButtonProps>`
   justify-content: center;
   gap: ${({ theme }) => theme.spacing.sm};
   font-weight: ${({ theme }) => theme.fontWeights.semibold};
+  letter-spacing: ${({ theme }) => theme.letterSpacing.wide};
   border-radius: ${({ theme }) => theme.borderRadius.lg};
   transition: all ${({ theme }) => theme.transitions.base};
   cursor: pointer;
@@ -102,7 +105,7 @@ const StyledButton = styled.button<StyledButtonProps>`
   ${({ $size }) => sizeStyles[$size]}
   ${({ $variant }) => variantStyles[$variant]}
   ${({ $fullWidth }) => $fullWidth && "width: 100%;"}
-`;
+`
 
 export function Button({
   children,
@@ -115,5 +118,5 @@ export function Button({
     <StyledButton $variant={variant} $size={size} $fullWidth={fullWidth} {...props}>
       {children}
     </StyledButton>
-  );
+  )
 }

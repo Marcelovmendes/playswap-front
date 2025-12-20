@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-import { spotifyApi } from "@/lib/api/spotify";
+import { useQuery } from "@tanstack/react-query"
+import { spotifyApi } from "@/lib/api/spotify"
 
 export function usePlaylists() {
   return useQuery({
@@ -7,5 +7,5 @@ export function usePlaylists() {
     queryFn: spotifyApi.playlists.getUserPlaylists,
     staleTime: 5 * 60 * 1000,
     retry: 1,
-  });
+  })
 }

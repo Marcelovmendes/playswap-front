@@ -68,7 +68,7 @@ export type SpotifyPlaylistResponse = {
   previous: string | null
 }
 
-export interface UserProfile {
+export type UserProfile = {
   id: string
   displayName: string
   email: string
@@ -79,7 +79,7 @@ export interface UserProfile {
   type: string
 }
 
-export interface Playlist {
+export type Playlist = {
   id: string
   name: string
   description: string | null
@@ -90,4 +90,15 @@ export interface Playlist {
   publicAccess: boolean
   collaborative: boolean
   externalUrl: string
+}
+
+export type Track = {
+  id: string
+  name: string
+  artist: string
+  album: string
+  imageUrl: string | null
+  durationMs: number
+  externalUrl: string
+  previewUrl: string | null
 }

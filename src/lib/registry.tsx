@@ -1,10 +1,10 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { useServerInsertedHTML } from 'next/navigation'
-import { ServerStyleSheet, StyleSheetManager, ThemeProvider } from 'styled-components'
-import { theme } from '@/styles/theme'
-import { GlobalStyles } from '@/styles/GlobalStyles'
+import { useState } from "react"
+import { useServerInsertedHTML } from "next/navigation"
+import { ServerStyleSheet, StyleSheetManager, ThemeProvider } from "styled-components"
+import { theme } from "@/styles/theme"
+import { GlobalStyles } from "@/styles/GlobalStyles"
 
 export function StyledComponentsRegistry({ children }: { children: React.ReactNode }) {
   const [styledComponentsStyleSheet] = useState(() => new ServerStyleSheet())
@@ -15,7 +15,7 @@ export function StyledComponentsRegistry({ children }: { children: React.ReactNo
     return <>{styles}</>
   })
 
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     return (
       <ThemeProvider theme={theme}>
         <GlobalStyles />
