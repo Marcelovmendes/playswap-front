@@ -7,12 +7,10 @@ import { Button } from "@/components/ui/Button"
 import { Card } from "@/components/ui/Card"
 import { GradientHeading } from "@/components/ui/GradientHeading"
 import { spotifyApi } from "@/lib/api/spotify"
-import { apiClient } from "@/lib/api/client"
 
 type SpotifyAuthMessage = {
   type: "SPOTIFY_AUTH_CALLBACK"
   status: "success" | "error"
-  token: string | null
   error: string | null
 }
 
@@ -50,7 +48,10 @@ export default function LandingPage() {
 
   useEffect(() => {
     async function handleMessage(event: MessageEvent) {
-      const allowedOrigins = ["http://localhost:3000", "http://127.0.0.1:3000"]
+      const allowedOrigins = [
+        process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000",
+        "http://127.0.0.1:3000",
+      ].filter(Boolean)
 
       if (!allowedOrigins.includes(event.origin)) {
         return
@@ -61,11 +62,6 @@ export default function LandingPage() {
       }
 
       if (event.data.status === "success") {
-        if (!event.data.token) {
-          setError("No token received from authentication")
-          return
-        }
-
         if (isExchangingRef.current) {
           return
         }
@@ -74,20 +70,18 @@ export default function LandingPage() {
         setIsLoading(true)
 
         try {
-          await apiClient.post("/api/auth/exchange", {
-            token: event.data.token,
-          })
-
+          // Session cookie already created by backend
+          // Just navigate to dashboard
           router.push("/dashboard")
         } catch (error) {
-          console.error("Auth exchange error:", error)
-          setError("Failed to complete authentication")
+          console.error("Navigation error:", error)
+          setError("Failed to navigate to dashboard")
           isExchangingRef.current = false
-        } finally {
           setIsLoading(false)
         }
       } else if (event.data.status === "error") {
         setError(event.data.error || "Authentication failed")
+        setIsLoading(false)
       }
     }
 

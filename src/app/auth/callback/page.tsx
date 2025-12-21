@@ -8,30 +8,34 @@ function CallbackContent() {
   const searchParams = useSearchParams()
 
   useEffect(() => {
-    const token = searchParams.get("token")
+    const status = searchParams.get("status")
     const error = searchParams.get("error")
+    const message = searchParams.get("message")
 
     if (window.opener) {
-      const message = {
+      const authMessage = {
         type: "SPOTIFY_AUTH_CALLBACK",
-        status: token ? "success" : "error",
-        token: token || null,
-        error: error || (token ? null : "Authentication failed"),
+        status: status === "success" ? "success" : "error",
+        error: error || message || (status === "success" ? null : "Authentication failed"),
       }
 
-      const origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
-      origins.forEach((origin) => {
-        window.opener.postMessage(message, origin)
+      const allowedOrigins = [
+        process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000",
+        "http://127.0.0.1:3000",
+      ].filter(Boolean)
+
+      allowedOrigins.forEach((origin) => {
+        window.opener.postMessage(authMessage, origin)
       })
 
       setTimeout(() => {
         window.close()
       }, 3000)
     } else {
-      if (token) {
+      if (status === "success") {
         router.push("/dashboard")
       } else {
-        router.push("/?error=" + (error || "auth_failed"))
+        router.push("/?error=" + (error || message || "auth_failed"))
       }
     }
   }, [searchParams, router])
