@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button"
 import { Card } from "@/components/ui/Card"
 import { GradientHeading } from "@/components/ui/GradientHeading"
 import { spotifyApi } from "@/lib/api/spotify"
+import { useToast } from "@/lib/hooks/useToast"
 
 type SpotifyAuthMessage = {
   type: "SPOTIFY_AUTH_CALLBACK"
@@ -26,21 +27,28 @@ function isSpotifyAuthMessage(data: unknown): data is SpotifyAuthMessage {
 export default function LandingPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const isExchangingRef = useRef(false)
+  const { addToast } = useToast()
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get("error") === "session_expired") {
+      addToast("Sua sessão expirou. Faça login novamente.", "error")
+      window.history.replaceState({}, "", "/")
+    }
+  }, [addToast])
 
   const handleConnectSpotify = async () => {
     try {
       setIsLoading(true)
-      setError(null)
       await spotifyApi.auth.initiateLogin()
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error connecting to Spotify:", error)
       const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
-        "Failed to connect to Spotify. Please check if the backend is running."
-      setError(errorMessage)
+        error instanceof Error
+          ? error.message
+          : "Não foi possível conectar ao Spotify. Tente novamente."
+      addToast(errorMessage, "error")
     } finally {
       setIsLoading(false)
     }
@@ -70,24 +78,22 @@ export default function LandingPage() {
         setIsLoading(true)
 
         try {
-          // Session cookie already created by backend
-          // Just navigate to dashboard
           router.push("/dashboard")
         } catch (error) {
           console.error("Navigation error:", error)
-          setError("Failed to navigate to dashboard")
+          addToast("Erro ao navegar para o dashboard", "error")
           isExchangingRef.current = false
           setIsLoading(false)
         }
       } else if (event.data.status === "error") {
-        setError(event.data.error || "Authentication failed")
+        addToast(event.data.error || "Autenticação Spotify falhou", "error")
         setIsLoading(false)
       }
     }
 
     window.addEventListener("message", handleMessage)
     return () => window.removeEventListener("message", handleMessage)
-  }, [router])
+  }, [router, addToast])
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-2xl bg-bg-primary">
@@ -115,11 +121,6 @@ export default function LandingPage() {
               Learn More
             </Button>
           </div>
-          {error && (
-            <div className="mt-md p-md bg-red-500/10 border border-red-500/30 rounded-lg text-[#ef4444] text-center max-w-[600px] mx-auto">
-              {error}
-            </div>
-          )}
         </div>
       </section>
 

@@ -137,11 +137,21 @@ const config: Config = {
         spin: {
           to: { transform: "rotate(360deg)" },
         },
+        slideInRight: {
+          "0%": { transform: "translateX(100%)", opacity: "0" },
+          "100%": { transform: "translateX(0)", opacity: "1" },
+        },
+        slideOutRight: {
+          "0%": { transform: "translateX(0)", opacity: "1" },
+          "100%": { transform: "translateX(100%)", opacity: "0" },
+        },
       },
       animation: {
         pulse: "pulse 8s ease-in-out infinite",
         "pulse-fast": "pulse 6s ease-in-out infinite",
         spin: "spin 1s linear infinite",
+        "slide-in-right": "slideInRight 0.3s ease-out",
+        "slide-out-right": "slideOutRight 0.3s ease-in forwards",
       },
     },
   },
