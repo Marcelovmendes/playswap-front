@@ -24,9 +24,23 @@ function CallbackContent() {
         "http://127.0.0.1:3000",
       ].filter(Boolean)
 
-      allowedOrigins.forEach((origin) => {
-        window.opener.postMessage(authMessage, origin)
-      })
+      try {
+        const openerOrigin = window.opener.location.origin
+
+        if (allowedOrigins.includes(openerOrigin)) {
+          window.opener.postMessage(authMessage, openerOrigin)
+        } else {
+          console.error("Opener origin not allowed:", openerOrigin)
+        }
+      } catch (e) {
+        allowedOrigins.forEach((origin) => {
+          try {
+            window.opener.postMessage(authMessage, origin)
+          } catch (err) {
+            console.error("Failed to post message to:", origin, err)
+          }
+        })
+      }
 
       setTimeout(() => {
         window.close()
