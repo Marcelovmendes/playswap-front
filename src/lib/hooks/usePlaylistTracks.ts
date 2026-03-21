@@ -16,7 +16,7 @@ async function fetchPlaylistTracks(
   limit: number = 50
 ): Promise<PlaylistTracksResponse> {
   const response = await apiClient.get<PlaylistTracksResponse>(
-    `/api/spotify/v1/playlist/${playlistId}/tracks`,
+    `/api/spotify/playlists/${playlistId}/tracks`,
     {
       params: { offset, limit },
     }

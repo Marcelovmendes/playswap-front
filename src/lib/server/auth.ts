@@ -2,7 +2,7 @@
 import { cookies } from "next/headers"
 import type { UserProfile } from "@/types/spotify"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8080"
+const GATEWAY_URL = process.env.NEXT_PUBLIC_GATEWAY_URL || "http://127.0.0.1:8080"
 
 export async function getServerAuth() {
   const cookieStore = cookies()
@@ -16,7 +16,7 @@ export async function getServerAuth() {
   }
 
   try {
-    const response = await fetch(`${API_URL}/api/spotify/v1/users/details`, {
+    const response = await fetch(`${GATEWAY_URL}/api/spotify/users/details`, {
       headers: {
         Cookie: cookieHeader,
       },
