@@ -102,3 +102,17 @@ export type Track = {
   externalUrl: string
   previewUrl: string | null
 }
+
+export type SavedTrack = {
+  track: Track
+  addedAt: string
+}
+
+export type SavedTracksResponse = {
+  items: SavedTrack[]
+  total: number
+  limit: number
+  offset: number
+  next: string | null
+  previous: string | null
+}

@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation"
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader"
 import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid"
+import { LikedSongsCard } from "@/components/dashboard/LikedSongsCard"
 import { getServerAuth } from "@/lib/server/auth"
-import { getPlaylists } from "@/lib/server/actions"
+import { getPlaylists, getSavedTracks } from "@/lib/server/actions"
 
 export default async function DashboardPage() {
   const { user, isAuthenticated } = await getServerAuth()
@@ -12,8 +13,15 @@ export default async function DashboardPage() {
   }
 
   let playlists
+  let savedTracksTotal = 0
+
   try {
-    playlists = await getPlaylists()
+    const [playlistsData, savedTracksData] = await Promise.all([
+      getPlaylists(),
+      getSavedTracks(0, 1),
+    ])
+    playlists = playlistsData
+    savedTracksTotal = savedTracksData.total
   } catch (error) {
     return (
       <div className="min-h-screen p-xl bg-bg-primary">
@@ -48,12 +56,18 @@ export default async function DashboardPage() {
                 </span>{" "}
                 Tracks
               </div>
+              <div className="text-sm text-text-quaternary tracking-wide">
+                <span className="text-pink-500 font-semibold">{savedTracksTotal}</span>{" "}
+                Liked
+              </div>
             </div>
           </div>
         </div>
 
         <section className="mb-2xl">
-          <PlaylistGrid playlists={playlists} />
+          <PlaylistGrid playlists={playlists}>
+            <LikedSongsCard totalTracks={savedTracksTotal} />
+          </PlaylistGrid>
         </section>
       </main>
     </div>

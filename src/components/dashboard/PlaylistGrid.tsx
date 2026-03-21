@@ -7,12 +7,13 @@ import type { Playlist } from "@/types/spotify"
 
 type PlaylistGridProps = {
   playlists: Playlist[]
+  children?: React.ReactNode
 }
 
-export function PlaylistGrid({ playlists }: PlaylistGridProps) {
+export function PlaylistGrid({ playlists, children }: PlaylistGridProps) {
   const router = useRouter()
 
-  if (playlists.length === 0) {
+  if (playlists.length === 0 && !children) {
     return (
       <div className="text-center p-3xl">
         <Music className="w-16 h-16 text-text-tertiary mx-auto mb-lg" />
@@ -23,6 +24,7 @@ export function PlaylistGrid({ playlists }: PlaylistGridProps) {
 
   return (
     <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-lg">
+      {children}
       {playlists.map((playlist) => (
         <Card
           key={playlist.id}
