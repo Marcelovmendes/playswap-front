@@ -98,7 +98,12 @@ export default async function PlaylistPreviewPage({ params }: PageProps) {
         fetchTracks={getPlaylistTracks}
       />
 
-      <PlaylistActions playlistId={playlistId} />
+      <PlaylistActions
+        playlistId={playlistId}
+        playlistName={playlist.name}
+        playlistImage={playlist.imageUrl ?? undefined}
+        totalTracks={playlist.trackCount}
+      />
     </div>
   )
 }

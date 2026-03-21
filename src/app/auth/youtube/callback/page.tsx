@@ -1,0 +1,103 @@
+"use client"
+
+import { Suspense, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
+import { Youtube } from "lucide-react"
+
+function YouTubeCallbackContent() {
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    const state = searchParams.get("state")
+    const storageKey = `youtube_callback_processed_${state}`
+
+    if (sessionStorage.getItem(storageKey)) {
+      return
+    }
+    sessionStorage.setItem(storageKey, "true")
+
+    const status = searchParams.get("status")
+    const error = searchParams.get("error")
+    const message = searchParams.get("message")
+
+    if (window.opener) {
+      const authMessage = {
+        type: "YOUTUBE_AUTH_CALLBACK",
+        status: status === "success" ? "success" : "error",
+        error: error || message || (status === "success" ? null : "Authentication failed"),
+      }
+
+      const allowedOrigins = [
+        process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3000",
+      ].filter(Boolean)
+
+      try {
+        const openerOrigin = window.opener.location.origin
+
+        if (allowedOrigins.includes(openerOrigin)) {
+          window.opener.postMessage(authMessage, openerOrigin)
+        }
+      } catch {
+        allowedOrigins.forEach((origin) => {
+          try {
+            window.opener.postMessage(authMessage, origin)
+          } catch {
+            // Silently fail
+          }
+        })
+      }
+
+      setTimeout(() => {
+        window.close()
+      }, 1500)
+    }
+  }, [searchParams])
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-bg-primary p-xl">
+      <div className="max-w-md w-full text-center">
+        <div className="mb-xl">
+          <div className="w-20 h-20 mx-auto mb-lg rounded-full bg-[linear-gradient(135deg,#FF0000_0%,#cc0000_100%)] flex items-center justify-center animate-pulse">
+            <Youtube className="w-10 h-10 text-white" />
+          </div>
+
+          <h2 className="text-2xl font-bold text-text-primary mb-sm">YouTube Connected!</h2>
+          <p className="text-base text-text-secondary mb-lg">
+            Your YouTube account has been connected successfully.
+          </p>
+
+          <div className="glass-effect rounded-lg p-lg mb-lg">
+            <p className="text-sm text-text-quaternary">
+              This window will close automatically in a few seconds...
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => window.close()}
+          className="text-sm text-[#FF0000] hover:text-[#cc0000] transition-colors duration-base cursor-pointer underline"
+        >
+          Click here to close manually
+        </button>
+      </div>
+    </div>
+  )
+}
+
+export default function YouTubeCallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-bg-primary">
+          <div className="text-center">
+            <div className="text-lg text-text-primary">Loading...</div>
+          </div>
+        </div>
+      }
+    >
+      <YouTubeCallbackContent />
+    </Suspense>
+  )
+}
