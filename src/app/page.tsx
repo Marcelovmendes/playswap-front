@@ -58,6 +58,7 @@ export default function LandingPage() {
     async function handleMessage(event: MessageEvent) {
       const allowedOrigins = [
         process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000",
+        process.env.NEXT_PUBLIC_GATEWAY_URL || "http://localhost:8080",
         "http://127.0.0.1:3000",
       ].filter(Boolean)
 
