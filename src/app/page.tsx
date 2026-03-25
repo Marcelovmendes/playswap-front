@@ -57,6 +57,15 @@ export default function LandingPage() {
         }
 
         if (popupRef.current?.closed) {
+          for (let i = 0; i < 5; i++) {
+            await new Promise((r) => setTimeout(r, 1500))
+            const retryAuth = await spotifyApi.auth.pollAuthStatus()
+            if (retryAuth) {
+              stopPolling()
+              router.push("/dashboard")
+              return
+            }
+          }
           stopPolling()
           setIsLoading(false)
           return
