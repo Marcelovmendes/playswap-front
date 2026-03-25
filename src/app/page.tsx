@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowRight, Music, Youtube } from "lucide-react"
 import { Button } from "@/components/ui/Button"
@@ -12,9 +12,6 @@ import { useToast } from "@/lib/hooks/useToast"
 export default function LandingPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
-  const popupRef = useRef<Window | null>(null)
-  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const pollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { addToast } = useToast()
 
   useEffect(() => {
@@ -25,43 +22,16 @@ export default function LandingPage() {
     }
   }, [addToast])
 
-  const stopPolling = () => {
-    if (pollIntervalRef.current !== null) {
-      clearInterval(pollIntervalRef.current)
-      pollIntervalRef.current = null
-    }
-    if (pollTimeoutRef.current !== null) {
-      clearTimeout(pollTimeoutRef.current)
-      pollTimeoutRef.current = null
-    }
-  }
-
   const handleConnectSpotify = async () => {
     try {
       setIsLoading(true)
       const popup = await spotifyApi.auth.initiateLogin()
-      popupRef.current = popup
 
       if (!popup) {
         setIsLoading(false)
         addToast("Popup bloqueado pelo navegador. Permita popups e tente novamente.", "error")
         return
       }
-
-      pollIntervalRef.current = setInterval(async () => {
-        const isAuthenticated = await spotifyApi.auth.pollAuthStatus()
-        if (isAuthenticated) {
-          stopPolling()
-          router.push("/dashboard")
-        }
-      }, 2000)
-
-      pollTimeoutRef.current = setTimeout(() => {
-        stopPolling()
-        setIsLoading(false)
-        addToast("Login expirou. Tente novamente.", "error")
-      }, 120_000)
-
     } catch (error: unknown) {
       console.error("Error connecting to Spotify:", error)
       const errorMessage =
@@ -76,18 +46,15 @@ export default function LandingPage() {
   useEffect(() => {
     const handleStorage = (e: StorageEvent) => {
       if (e.key === "spotify_auth" && e.newValue) {
-        stopPolling()
         localStorage.removeItem("spotify_auth")
         router.push("/dashboard")
       }
     }
     window.addEventListener("storage", handleStorage)
     return () => {
-      stopPolling()
       window.removeEventListener("storage", handleStorage)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [router])
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-2xl bg-bg-primary">
