@@ -49,16 +49,17 @@ export default function LandingPage() {
       }
 
       pollIntervalRef.current = setInterval(async () => {
-        if (popupRef.current?.closed) {
-          stopPolling()
-          setIsLoading(false)
-          return
-        }
-
         const isAuthenticated = await spotifyApi.auth.pollAuthStatus()
         if (isAuthenticated) {
           stopPolling()
           router.push("/dashboard")
+          return
+        }
+
+        if (popupRef.current?.closed) {
+          stopPolling()
+          setIsLoading(false)
+          return
         }
       }, 2000)
 
