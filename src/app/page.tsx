@@ -9,25 +9,12 @@ import { GradientHeading } from "@/components/ui/GradientHeading"
 import { spotifyApi } from "@/lib/api/spotify"
 import { useToast } from "@/lib/hooks/useToast"
 
-type SpotifyAuthMessage = {
-  type: "SPOTIFY_AUTH_CALLBACK"
-  status: "success" | "error"
-  error: string | null
-}
-
-function isSpotifyAuthMessage(data: unknown): data is SpotifyAuthMessage {
-  return (
-    typeof data === "object" &&
-    data !== null &&
-    "type" in data &&
-    (data as SpotifyAuthMessage).type === "SPOTIFY_AUTH_CALLBACK"
-  )
-}
-
 export default function LandingPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
-  const isExchangingRef = useRef(false)
+  const popupRef = useRef<Window | null>(null)
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const pollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { addToast } = useToast()
 
   useEffect(() => {
@@ -38,10 +25,49 @@ export default function LandingPage() {
     }
   }, [addToast])
 
+  const stopPolling = () => {
+    if (pollIntervalRef.current !== null) {
+      clearInterval(pollIntervalRef.current)
+      pollIntervalRef.current = null
+    }
+    if (pollTimeoutRef.current !== null) {
+      clearTimeout(pollTimeoutRef.current)
+      pollTimeoutRef.current = null
+    }
+  }
+
   const handleConnectSpotify = async () => {
     try {
       setIsLoading(true)
-      await spotifyApi.auth.initiateLogin()
+      const popup = await spotifyApi.auth.initiateLogin()
+      popupRef.current = popup
+
+      if (!popup) {
+        setIsLoading(false)
+        addToast("Popup bloqueado pelo navegador. Permita popups e tente novamente.", "error")
+        return
+      }
+
+      pollIntervalRef.current = setInterval(async () => {
+        if (popupRef.current?.closed) {
+          stopPolling()
+          setIsLoading(false)
+          return
+        }
+
+        const isAuthenticated = await spotifyApi.auth.pollAuthStatus()
+        if (isAuthenticated) {
+          stopPolling()
+          router.push("/dashboard")
+        }
+      }, 2000)
+
+      pollTimeoutRef.current = setTimeout(() => {
+        stopPolling()
+        setIsLoading(false)
+        addToast("Login expirou. Tente novamente.", "error")
+      }, 120_000)
+
     } catch (error: unknown) {
       console.error("Error connecting to Spotify:", error)
       const errorMessage =
@@ -49,52 +75,16 @@ export default function LandingPage() {
           ? error.message
           : "Não foi possível conectar ao Spotify. Tente novamente."
       addToast(errorMessage, "error")
-    } finally {
       setIsLoading(false)
     }
   }
 
   useEffect(() => {
-    async function handleMessage(event: MessageEvent) {
-      const allowedOrigins = [
-        process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000",
-        process.env.NEXT_PUBLIC_GATEWAY_URL || "http://localhost:8080",
-        "http://127.0.0.1:3000",
-      ].filter(Boolean)
-
-      if (!allowedOrigins.includes(event.origin)) {
-        return
-      }
-
-      if (!isSpotifyAuthMessage(event.data)) {
-        return
-      }
-
-      if (event.data.status === "success") {
-        if (isExchangingRef.current) {
-          return
-        }
-
-        isExchangingRef.current = true
-        setIsLoading(true)
-
-        try {
-          router.push("/dashboard")
-        } catch (error) {
-          console.error("Navigation error:", error)
-          addToast("Erro ao navegar para o dashboard", "error")
-          isExchangingRef.current = false
-          setIsLoading(false)
-        }
-      } else if (event.data.status === "error") {
-        addToast(event.data.error || "Autenticação Spotify falhou", "error")
-        setIsLoading(false)
-      }
+    return () => {
+      stopPolling()
     }
-
-    window.addEventListener("message", handleMessage)
-    return () => window.removeEventListener("message", handleMessage)
-  }, [router, addToast])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-2xl bg-bg-primary">

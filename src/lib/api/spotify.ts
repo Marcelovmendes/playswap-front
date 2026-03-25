@@ -21,7 +21,7 @@ const spotifyAuthClient = axios.create({
 
 export const spotifyApi = {
   auth: {
-    initiateLogin: async () => {
+    initiateLogin: async (): Promise<Window | null> => {
       const response = await spotifyAuthClient.get<string>("/auth/", {
         headers: {
           "Content-Type": "text/plain",
@@ -32,7 +32,19 @@ export const spotifyApi = {
       const height = 700
       const left = window.screenX + (window.outerWidth - width) / 2
       const top = window.screenY + (window.outerHeight - height) / 2
-      window.open(spotifyAuthUrl, "_blank", `width=${width},height=${height},left=${left},top=${top}`)
+      const popup = window.open(spotifyAuthUrl, "_blank", `width=${width},height=${height},left=${left},top=${top}`)
+      return popup
+    },
+    pollAuthStatus: async (): Promise<boolean> => {
+      const gatewayUrl = process.env.NEXT_PUBLIC_GATEWAY_URL || "http://127.0.0.1:8080"
+      try {
+        const response = await fetch(`${gatewayUrl}/api/spotify/users/details`, {
+          credentials: "include",
+        })
+        return response.ok
+      } catch {
+        return false
+      }
     },
     linkYoutube: async (youtubeSessionId: string) => {
       await spotifyAuthClient.post("/auth/link-youtube", { youtubeSessionId })
