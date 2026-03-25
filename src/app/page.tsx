@@ -53,22 +53,6 @@ export default function LandingPage() {
         if (isAuthenticated) {
           stopPolling()
           router.push("/dashboard")
-          return
-        }
-
-        if (popupRef.current?.closed) {
-          for (let i = 0; i < 5; i++) {
-            await new Promise((r) => setTimeout(r, 1500))
-            const retryAuth = await spotifyApi.auth.pollAuthStatus()
-            if (retryAuth) {
-              stopPolling()
-              router.push("/dashboard")
-              return
-            }
-          }
-          stopPolling()
-          setIsLoading(false)
-          return
         }
       }, 2000)
 
@@ -90,8 +74,17 @@ export default function LandingPage() {
   }
 
   useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "spotify_auth" && e.newValue) {
+        stopPolling()
+        localStorage.removeItem("spotify_auth")
+        router.push("/dashboard")
+      }
+    }
+    window.addEventListener("storage", handleStorage)
     return () => {
       stopPolling()
+      window.removeEventListener("storage", handleStorage)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

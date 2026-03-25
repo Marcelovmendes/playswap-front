@@ -1,58 +1,31 @@
 "use client"
 
-import { Suspense, useEffect } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 
 function CallbackContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const [showFallback, setShowFallback] = useState(false)
 
   useEffect(() => {
     const status = searchParams.get("status")
-    const error = searchParams.get("error")
     const message = searchParams.get("message")
 
-    if (window.opener) {
-      const authMessage = {
-        type: "SPOTIFY_AUTH_CALLBACK",
-        status: status === "success" ? "success" : "error",
-        error: error || message || (status === "success" ? null : "Authentication failed"),
-      }
-
-      const allowedOrigins = [
-        process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000",
-        "http://127.0.0.1:3000",
-      ].filter(Boolean)
-
-      try {
-        const openerOrigin = window.opener.location.origin
-
-        if (allowedOrigins.includes(openerOrigin)) {
-          window.opener.postMessage(authMessage, openerOrigin)
-        } else {
-          console.error("Opener origin not allowed:", openerOrigin)
-        }
-      } catch (e) {
-        allowedOrigins.forEach((origin) => {
-          try {
-            window.opener.postMessage(authMessage, origin)
-          } catch (err) {
-            console.error("Failed to post message to:", origin, err)
-          }
-        })
-      }
-
+    if (status === "success") {
+      localStorage.setItem("spotify_auth", String(Date.now()))
+      window.close()
+      setShowFallback(true)
       setTimeout(() => {
-        window.close()
+        router.push("/dashboard")
       }, 3000)
     } else {
-      if (status === "success") {
-        router.push("/dashboard")
-      } else {
-        router.push("/?error=" + (error || message || "auth_failed"))
-      }
+      const error = message || "auth_failed"
+      router.push("/?error=" + encodeURIComponent(error))
     }
   }, [searchParams, router])
+
+  if (!showFallback) return null
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-bg-primary p-xl">
