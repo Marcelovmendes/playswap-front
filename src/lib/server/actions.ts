@@ -98,7 +98,7 @@ export async function getSavedTracks(
 
   try {
     const response = await fetch(
-      `http://127.0.0.1:8080/playlists/saved-tracks?offset=${offset}&limit=${limit}`,
+      `${GATEWAY_URL}/api/spotify/playlists/saved-tracks?offset=${offset}&limit=${limit}`,
       {
         headers: {
           Cookie: cookieHeader,
