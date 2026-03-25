@@ -22,17 +22,22 @@ const spotifyAuthClient = axios.create({
 export const spotifyApi = {
   auth: {
     initiateLogin: async (): Promise<Window | null> => {
+      const width = 500
+      const height = 700
+      const left = window.screenX + (window.outerWidth - width) / 2
+      const top = window.screenY + (window.outerHeight - height) / 2
+      const popup = window.open("about:blank", "_blank", `width=${width},height=${height},left=${left},top=${top}`)
+
       const response = await spotifyAuthClient.get<string>("/auth/", {
         headers: {
           "Content-Type": "text/plain",
         },
       })
       const spotifyAuthUrl = response.data
-      const width = 500
-      const height = 700
-      const left = window.screenX + (window.outerWidth - width) / 2
-      const top = window.screenY + (window.outerHeight - height) / 2
-      const popup = window.open(spotifyAuthUrl, "_blank", `width=${width},height=${height},left=${left},top=${top}`)
+
+      if (popup) {
+        popup.location.href = spotifyAuthUrl
+      }
       return popup
     },
     pollAuthStatus: async (): Promise<boolean> => {
