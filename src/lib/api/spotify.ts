@@ -52,7 +52,7 @@ export const spotifyApi = {
       }
     },
     linkYoutube: async (youtubeSessionId: string) => {
-      await spotifyAuthClient.post("/auth/link-youtube", { youtubeSessionId })
+      await apiClient.post("/api/auth/spotify/link-youtube", { youtubeSessionId })
     },
   },
 
