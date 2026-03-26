@@ -18,7 +18,7 @@ type SessionResponse = {
 export const youtubeApi = {
   auth: {
     initiateLogin: async () => {
-      const response = await youtubeAuthClient.get<AuthResponse>("/v1/auth/")
+      const response = await youtubeAuthClient.get<AuthResponse>("/v1/auth")
       const googleAuthUrl = response.data.authorizationUrl
       if (googleAuthUrl) {
         const width = 500
