@@ -3,21 +3,6 @@ import { youtubeApi } from "@/lib/api/youtube"
 import { spotifyApi } from "@/lib/api/spotify"
 import { toastEvents } from "@/lib/events/toastEvents"
 
-type YouTubeAuthMessage = {
-  type: "YOUTUBE_AUTH_CALLBACK"
-  status: "success" | "error"
-  error: string | null
-}
-
-function isYouTubeAuthMessage(data: unknown): data is YouTubeAuthMessage {
-  return (
-    typeof data === "object" &&
-    data !== null &&
-    "type" in data &&
-    (data as YouTubeAuthMessage).type === "YOUTUBE_AUTH_CALLBACK"
-  )
-}
-
 export function useYoutubeAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isConnecting, setIsConnecting] = useState(false)
@@ -65,46 +50,30 @@ export function useYoutubeAuth() {
   }, [])
 
   useEffect(() => {
-    async function handleMessage(event: MessageEvent) {
-      const allowedOrigins = [
-        process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://localhost:3000",
-      ].filter(Boolean)
-
-      if (!allowedOrigins.includes(event.origin)) {
-        return
+    function handleStorage(e: StorageEvent) {
+      if (e.key === "youtube_auth" && e.newValue) {
+        localStorage.removeItem("youtube_auth")
+        ;(async () => {
+          try {
+            const youtubeSessionId = await youtubeApi.auth.getSession()
+            await spotifyApi.auth.linkYoutube(youtubeSessionId)
+            setIsAuthenticated(true)
+            setError(null)
+          } catch (err) {
+            const errorMessage =
+              err instanceof Error
+                ? err.message
+                : "Falha ao vincular sessão do YouTube"
+            setError(errorMessage)
+            toastEvents.emit({ message: errorMessage, variant: "error" })
+          }
+          setIsConnecting(false)
+        })()
       }
-
-      if (!isYouTubeAuthMessage(event.data)) {
-        return
-      }
-
-      if (event.data.status === "success") {
-        try {
-          const youtubeSessionId = await youtubeApi.auth.getSession()
-          await spotifyApi.auth.linkYoutube(youtubeSessionId)
-          setIsAuthenticated(true)
-          setError(null)
-        } catch (err) {
-          const errorMessage =
-            err instanceof Error
-              ? err.message
-              : "Falha ao vincular sessão do YouTube"
-          setError(errorMessage)
-          toastEvents.emit({ message: errorMessage, variant: "error" })
-        }
-      } else {
-        const errorMessage = event.data.error || "Autenticação YouTube falhou"
-        setError(errorMessage)
-        toastEvents.emit({ message: errorMessage, variant: "error" })
-      }
-
-      setIsConnecting(false)
     }
 
-    window.addEventListener("message", handleMessage)
-    return () => window.removeEventListener("message", handleMessage)
+    window.addEventListener("storage", handleStorage)
+    return () => window.removeEventListener("storage", handleStorage)
   }, [])
 
   return {

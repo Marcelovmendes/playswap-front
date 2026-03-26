@@ -1,9 +1,9 @@
 import axios from "axios"
 
-const YOUTUBE_SERVICE_URL = process.env.NEXT_PUBLIC_YOUTUBE_SERVICE_URL || "http://127.0.0.1:8081"
+const GATEWAY_URL = process.env.NEXT_PUBLIC_GATEWAY_URL || "http://127.0.0.1:8080"
 
 const youtubeAuthClient = axios.create({
-  baseURL: YOUTUBE_SERVICE_URL,
+  baseURL: GATEWAY_URL,
   withCredentials: true,
 })
 
@@ -18,7 +18,7 @@ type SessionResponse = {
 export const youtubeApi = {
   auth: {
     initiateLogin: async () => {
-      const response = await youtubeAuthClient.get<AuthResponse>("/v1/auth")
+      const response = await youtubeAuthClient.get<AuthResponse>("/v1/auth/")
       const googleAuthUrl = response.data.authorizationUrl
       if (googleAuthUrl) {
         const width = 500
@@ -29,7 +29,7 @@ export const youtubeApi = {
       }
     },
     getSession: async (): Promise<string> => {
-      const response = await youtubeAuthClient.get<SessionResponse>("/v1/auth/session")
+      const response = await youtubeAuthClient.get<SessionResponse>("/api/auth/youtube/session")
       return response.data.sessionId
     },
   },
