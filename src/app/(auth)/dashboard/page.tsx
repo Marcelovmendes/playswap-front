@@ -3,6 +3,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader"
 import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid"
 import { LikedSongsCard } from "@/components/dashboard/LikedSongsCard"
 import { getServerAuth } from "@/lib/server/auth"
+import { XCircle } from "lucide-react"
 import { getPlaylists, getSavedTracks } from "@/lib/server/actions"
 
 export default async function DashboardPage() {
@@ -26,9 +27,19 @@ export default async function DashboardPage() {
     return (
       <div className="min-h-screen p-xl bg-bg-primary">
         <DashboardHeader user={user} />
-        <main className="max-w-[1200px] mx-auto">
-          <div className="p-lg bg-red-500/10 border border-red-500/30 rounded-lg text-semantic-error text-center">
-            Failed to load playlists. Please try again later.
+        <main className="max-w-[1200px] mx-auto flex justify-center">
+          <div className="w-full max-w-md bg-white/[0.02] border border-border backdrop-blur-[10px] rounded-2xl p-2xl text-center">
+            <XCircle className="w-12 h-12 text-semantic-error mx-auto mb-lg" />
+            <h2 className="text-xl font-semibold text-text-primary mb-sm">Failed to load playlists</h2>
+            <p className="text-sm text-text-secondary mb-xl">
+              We couldn&apos;t load your playlists. This might be a temporary issue.
+            </p>
+            <a
+              href="/dashboard"
+              className="inline-flex items-center justify-center w-full px-lg py-md bg-white/10 border border-border rounded-lg text-text-primary text-sm font-medium hover:bg-white/20 transition-colors"
+            >
+              Try Again
+            </a>
           </div>
         </main>
       </div>

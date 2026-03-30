@@ -26,7 +26,9 @@ export async function getPlaylists(): Promise<Playlist[]> {
     })
 
     if (!response.ok) {
-      throw new Error("Failed to fetch playlists")
+      const body = await response.json().catch(() => null)
+      const msg = body?.message || body?.code || `Request failed with status ${response.status}`
+      throw new Error(msg)
     }
 
     return await response.json()
@@ -64,7 +66,9 @@ export async function getPlaylistTracks(
     )
 
     if (!response.ok) {
-      throw new Error("Failed to fetch playlist tracks")
+      const body = await response.json().catch(() => null)
+      const msg = body?.message || body?.code || `Request failed with status ${response.status}`
+      throw new Error(msg)
     }
 
     return await response.json()
@@ -109,7 +113,9 @@ export async function getSavedTracks(
     )
 
     if (!response.ok) {
-      throw new Error("Failed to fetch saved tracks")
+      const body = await response.json().catch(() => null)
+      const msg = body?.message || body?.code || `Request failed with status ${response.status}`
+      throw new Error(msg)
     }
 
     const data: SavedTracksApiResponse = await response.json()

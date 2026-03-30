@@ -3,6 +3,7 @@ import { PlaylistTracksTable } from "@/components/playlist/PlaylistTracksTable"
 import { PlaylistActions } from "@/components/playlist/PlaylistActions"
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader"
 import { getServerAuth } from "@/lib/server/auth"
+import { XCircle } from "lucide-react"
 import { getPlaylists, getPlaylistTracks } from "@/lib/server/actions"
 
 type PageProps = {
@@ -33,8 +34,20 @@ export default async function PlaylistPreviewPage({ params }: PageProps) {
     return (
       <div className="min-h-screen p-xl bg-bg-primary">
         <DashboardHeader user={user} />
-        <div className="p-lg bg-red-500/10 border border-red-500/30 rounded-lg text-semantic-error text-center">
-          Playlist not found
+        <div className="flex justify-center">
+          <div className="w-full max-w-md bg-white/[0.02] border border-border backdrop-blur-[10px] rounded-2xl p-2xl text-center">
+            <XCircle className="w-12 h-12 text-semantic-error mx-auto mb-lg" />
+            <h2 className="text-xl font-semibold text-text-primary mb-sm">Playlist not found</h2>
+            <p className="text-sm text-text-secondary mb-xl">
+              This playlist doesn&apos;t exist or you don&apos;t have access to it.
+            </p>
+            <a
+              href="/dashboard"
+              className="inline-flex items-center justify-center w-full px-lg py-md bg-white/10 border border-border rounded-lg text-text-primary text-sm font-medium hover:bg-white/20 transition-colors"
+            >
+              Back to Dashboard
+            </a>
+          </div>
         </div>
       </div>
     )

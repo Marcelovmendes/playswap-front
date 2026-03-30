@@ -8,6 +8,7 @@ type PageProps = {
     playlistName?: string
     playlistImage?: string
     totalTracks?: string
+    sourcePlaylistId?: string
   }>
 }
 
@@ -19,7 +20,7 @@ export default async function ConversionPage({ params, searchParams }: PageProps
   }
 
   const { jobId } = await params
-  const { playlistName, playlistImage, totalTracks } = await searchParams
+  const { playlistName, playlistImage, totalTracks, sourcePlaylistId } = await searchParams
 
   return (
     <ConversionContent
@@ -27,6 +28,7 @@ export default async function ConversionPage({ params, searchParams }: PageProps
       playlistName={playlistName ?? "Playlist"}
       playlistImage={playlistImage}
       totalTracks={totalTracks ? parseInt(totalTracks, 10) : undefined}
+      sourcePlaylistId={sourcePlaylistId}
     />
   )
 }

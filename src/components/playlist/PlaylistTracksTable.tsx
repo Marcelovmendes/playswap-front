@@ -4,6 +4,7 @@ import { useState, useTransition } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { TrackRowSkeleton } from "@/components/ui/Skeleton"
 import type { Track } from "@/types/spotify"
+import { showErrorToast } from "@/lib/errors/errorMessages"
 
 type PlaylistTracksTableProps = {
   initialTracks: Track[]
@@ -42,11 +43,15 @@ export function PlaylistTracksTable({
     if (currentPage > 0) {
       const newPage = currentPage - 1
       startTransition(async () => {
-        const data = await fetchTracks(playlistId, newPage * TRACKS_PER_PAGE, TRACKS_PER_PAGE)
-        setTracks(data.items)
-        setTotal(data.total)
-        setHasNext(data.hasNext)
-        setCurrentPage(newPage)
+        try {
+          const data = await fetchTracks(playlistId, newPage * TRACKS_PER_PAGE, TRACKS_PER_PAGE)
+          setTracks(data.items)
+          setTotal(data.total)
+          setHasNext(data.hasNext)
+          setCurrentPage(newPage)
+        } catch (error) {
+          showErrorToast(error)
+        }
       })
     }
   }
@@ -55,11 +60,15 @@ export function PlaylistTracksTable({
     if (hasNext) {
       const newPage = currentPage + 1
       startTransition(async () => {
-        const data = await fetchTracks(playlistId, newPage * TRACKS_PER_PAGE, TRACKS_PER_PAGE)
-        setTracks(data.items)
-        setTotal(data.total)
-        setHasNext(data.hasNext)
-        setCurrentPage(newPage)
+        try {
+          const data = await fetchTracks(playlistId, newPage * TRACKS_PER_PAGE, TRACKS_PER_PAGE)
+          setTracks(data.items)
+          setTotal(data.total)
+          setHasNext(data.hasNext)
+          setCurrentPage(newPage)
+        } catch (error) {
+          showErrorToast(error)
+        }
       })
     }
   }

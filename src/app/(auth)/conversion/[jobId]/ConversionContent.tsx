@@ -6,6 +6,7 @@ import { CheckCircle, XCircle, Loader2, ExternalLink, Music, ArrowLeft, Copy, Ch
 import { Button } from "@/components/ui/Button"
 import { cn } from "@/lib/utils"
 import { useConversionStatus } from "@/lib/hooks/useConversionStatus"
+import { parseConversionError } from "@/lib/errors/errorMessages"
 import type { ConversionStatus } from "@/types/conversion"
 
 type ConversionContentProps = {
@@ -13,6 +14,7 @@ type ConversionContentProps = {
   playlistName: string
   playlistImage?: string
   totalTracks?: number
+  sourcePlaylistId?: string
 }
 
 const statusLabels: Record<ConversionStatus, string> = {
@@ -80,7 +82,7 @@ function PlaylistImage({ imageUrl, playlistName }: { imageUrl?: string; playlist
   )
 }
 
-export function ConversionContent({ jobId, playlistName, playlistImage, totalTracks }: ConversionContentProps) {
+export function ConversionContent({ jobId, playlistName, playlistImage, totalTracks, sourcePlaylistId }: ConversionContentProps) {
   const { status, isLoading, isCompleted, isFailed, isTerminal } = useConversionStatus(jobId)
   const [copied, setCopied] = useState(false)
 
@@ -174,11 +176,15 @@ export function ConversionContent({ jobId, playlistName, playlistImage, totalTra
           </div>
         )}
 
-        {status?.error && (
-          <div className="p-md bg-semantic-error/10 border border-semantic-error/30 rounded-lg mb-xl">
-            <p className="text-sm text-semantic-error">{status.error}</p>
-          </div>
-        )}
+        {isFailed && status?.error && (() => {
+          const conversionError = parseConversionError(status.error, status.status)
+          return (
+            <div className="p-md bg-semantic-error/10 border border-semantic-error/30 rounded-lg mb-xl">
+              <p className="text-sm font-medium text-semantic-error mb-xs">{conversionError.title}</p>
+              <p className="text-sm text-semantic-error/80">{conversionError.message}</p>
+            </div>
+          )
+        })()}
 
         {isCompleted && status?.targetPlaylistUrl && (
           <div className="mb-md">
@@ -217,10 +223,19 @@ export function ConversionContent({ jobId, playlistName, playlistImage, totalTra
         )}
 
         {isTerminal && (
-          <Button variant="secondary" fullWidth onClick={handleCloseTab}>
-            <ArrowLeft className="w-4 h-4" />
-            Close Tab
-          </Button>
+          <div className="flex flex-col gap-sm">
+            {isFailed && sourcePlaylistId && (
+              <a href={`/playlist/${sourcePlaylistId}`} className="block w-full">
+                <Button variant="primary" fullWidth>
+                  Try Again
+                </Button>
+              </a>
+            )}
+            <Button variant="secondary" fullWidth onClick={handleCloseTab}>
+              <ArrowLeft className="w-4 h-4" />
+              Close Tab
+            </Button>
+          </div>
         )}
       </div>
     </div>

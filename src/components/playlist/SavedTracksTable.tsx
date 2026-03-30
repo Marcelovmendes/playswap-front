@@ -4,6 +4,7 @@ import { useState } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { TrackRowSkeleton } from "@/components/ui/Skeleton"
 import type { Track } from "@/types/spotify"
+import { showErrorToast } from "@/lib/errors/errorMessages"
 
 type SavedTracksTableProps = {
   initialTracks: Track[]
@@ -44,6 +45,8 @@ export function SavedTracksTable({
       setTotal(data.total)
       setHasNext(data.hasNext)
       setCurrentPage(newPage)
+    } catch (error) {
+      showErrorToast(error)
     } finally {
       setIsPending(false)
     }

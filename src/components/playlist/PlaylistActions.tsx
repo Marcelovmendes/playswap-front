@@ -6,6 +6,7 @@ import { ArrowLeft, Youtube, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/Button"
 import { useYoutubeAuth } from "@/lib/hooks/useYoutubeAuth"
 import { spotifyApi } from "@/lib/api/spotify"
+import { showErrorToast } from "@/lib/errors/errorMessages"
 
 type PlaylistActionsProps = {
   playlistId: string
@@ -39,6 +40,7 @@ export function PlaylistActions({
       const searchParams = new URLSearchParams({
         playlistName,
         totalTracks: totalTracks.toString(),
+        sourcePlaylistId: playlistId,
       })
       if (playlistImage) {
         searchParams.set("playlistImage", playlistImage)
@@ -46,7 +48,7 @@ export function PlaylistActions({
 
       window.open(`/conversion/${response.jobId}?${searchParams.toString()}`, "_blank")
     } catch (error) {
-      console.error("Failed to create conversion job:", error)
+      showErrorToast(error)
     } finally {
       setIsCreatingJob(false)
     }
